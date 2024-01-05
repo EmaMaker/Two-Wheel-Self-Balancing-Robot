@@ -32,21 +32,26 @@ void setup(void) {
 
   setup_imu();
   setup_motors();
-
+ 
   pinMode(LED_BUILTIN, OUTPUT);
   digitalWrite(LED_BUILTIN, HIGH);
 
-  // Let the initial error from madgwick filter discharge without affecting the integral term of the PID
-  unsigned long t = millis();
-  while (millis() - t < 2000) {
-    update_imu();
-  }
-
   myController.begin(&input, &output, &setpoint, KP, KI, KD, P_ON_E, FORWARD);
   myController.setOutputLimits(-0.72, 0.72);  // double of max torque motors can exhert
-  //myController.setWindUpLimits(-0.00001, 0.0001);
+  myController.setWindUpLimits(-0.2, 0.02);
   myController.setSampleTime(1);
   myController.start();
+
+  // Let the initial error from madgwick filter discharge without affecting the integral term of the PID
+  unsigned long t = millis();
+  while (millis() - t < 3000) {
+    compute();
+  }
+
+  move_pwm(MOT_SX, 0);
+  move_pwm(MOT_DX, 0);
+  myController.reset();
+  delay(1000);
 
   digitalWrite(LED_BUILTIN, LOW);
 }
@@ -55,15 +60,13 @@ double map_double(double x, double in_min, double in_max, double out_min, double
   return (x - in_min) * (out_max - out_min) / (in_max - in_min) + out_min;
 }
 
-unsigned long t = 0;
-double oldpwm = 0;
-
 void loop() {
+  compute();
+}
+
+void compute(){
   update_imu();
 
-  /*static double oldPitch = 0;
-  input = 0.5*oldPitch + 0.5*pitch;
-  oldPitch = pitch;*/
   input = pitch;
 
   myController.compute();
