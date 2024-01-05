@@ -19,9 +19,9 @@ Kd = KpTd/Tc
 */
 
 
-constexpr double KP = 6;
-constexpr double KI = 0.2;
-constexpr double KD = 0.1;
+constexpr double KP = 6.2;
+constexpr double KI = 0.25;
+constexpr double KD = 0.15;
 
 //double setpoint = -0.015;
 double setpoint = 0.0;
@@ -51,6 +51,7 @@ void setup(void) {
   // myController.setWindUpLimits(-0.2 , 0.02);
   myController.setSampleTime(1);
   myController.start();
+  
 
 
   digitalWrite(LED_BUILTIN, LOW);
