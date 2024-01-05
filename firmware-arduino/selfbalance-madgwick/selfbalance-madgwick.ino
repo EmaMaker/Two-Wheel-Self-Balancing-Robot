@@ -9,14 +9,18 @@ constexpr float MOT_DX_MULT = 1.0;
 ArduPID myController;
 
 // Calculated with matlab, then adjusted by hand
-// Decent values?
-/*constexpr double KP = 2.5;
-constexpr double KI = 0.04;
-constexpr double KD = 0.03;*/
 
-// Event better
-constexpr double KP = 4;
-constexpr double KI = 5;
+/* With KP = 10, about  12 periods of oscillation in 1sec
+Pc = 0.083
+
+PID Kp = 0.6Kc, Ti = 0.5Pc Td = 0.125Pc
+Ki = KpTc/ti
+Kd = KpTd/Tc
+*/
+
+
+constexpr double KP = 6;
+constexpr double KI = 0.2;
 constexpr double KD = 0.1;
 
 //double setpoint = -0.015;
@@ -36,22 +40,18 @@ void setup(void) {
   pinMode(LED_BUILTIN, OUTPUT);
   digitalWrite(LED_BUILTIN, HIGH);
 
-  myController.begin(&input, &output, &setpoint, KP, KI, KD, P_ON_E, FORWARD);
-  myController.setOutputLimits(-0.72, 0.72);  // double of max torque motors can exhert
-  myController.setWindUpLimits(-0.2, 0.02);
-  myController.setSampleTime(1);
-  myController.start();
-
   // Let the initial error from madgwick filter discharge without affecting the integral term of the PID
   unsigned long t = millis();
   while (millis() - t < 3000) {
-    compute();
+    update_imu();
   }
 
-  move_pwm(MOT_SX, 0);
-  move_pwm(MOT_DX, 0);
-  myController.reset();
-  delay(1000);
+  myController.begin(&input, &output, &setpoint, KP, KI, KD, P_ON_E, FORWARD);
+  myController.setOutputLimits(-0.72, 0.72);  // double of max torque motors can exhert
+  // myController.setWindUpLimits(-0.2 , 0.02);
+  myController.setSampleTime(1);
+  myController.start();
+
 
   digitalWrite(LED_BUILTIN, LOW);
 }
