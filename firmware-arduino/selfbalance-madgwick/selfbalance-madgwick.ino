@@ -18,10 +18,11 @@ Ki = KpTc/ti
 Kd = KpTd/Tc
 */ 
 
-
-constexpr double KP = 5.8;
-constexpr double KI = 0.2;
-constexpr double KD = 0.1;
+constexpr double kponkd = 935.9697;
+constexpr double kionkd = 1.3189e+04;
+constexpr double KD = 0.002;
+constexpr double KP = KD*kponkd;
+constexpr double KI = KD*kionkd;
 
 //double setpoint = -0.015;
 double setpoint = 0.0;
