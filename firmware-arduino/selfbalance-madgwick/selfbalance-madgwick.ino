@@ -16,12 +16,12 @@ Pc = 0.083
 PID Kp = 0.6Kc, Ti = 0.5Pc Td = 0.125Pc
 Ki = KpTc/ti
 Kd = KpTd/Tc
-*/
+*/ 
 
 
-constexpr double KP = 6.2;
-constexpr double KI = 0.25;
-constexpr double KD = 0.15;
+constexpr double KP = 5.8;
+constexpr double KI = 0.2;
+constexpr double KD = 0.1;
 
 //double setpoint = -0.015;
 double setpoint = 0.0;
@@ -51,7 +51,6 @@ void setup(void) {
   // myController.setWindUpLimits(-0.2 , 0.02);
   myController.setSampleTime(1);
   myController.start();
-  
 
 
   digitalWrite(LED_BUILTIN, LOW);
