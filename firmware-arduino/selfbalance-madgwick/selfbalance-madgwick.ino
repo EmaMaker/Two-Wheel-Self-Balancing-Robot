@@ -30,6 +30,12 @@ double input = 0;
 
 double roll{ 0 }, pitch{ 0 }, yaw{ 0 };
 
+constexpr double max_torque_sx = 0.392;
+constexpr double max_torque_dx = 0.36;
+constexpr double max_torque = max_torque_dx+max_torque_sx;
+constexpr double torque_sx_coeff = max_torque_sx/max_torque;
+constexpr double torque_dx_coeff = max_torque_dx/max_torque;
+
 void setup(void) {
   Serial.begin(9600);
   delay(500);
@@ -47,7 +53,7 @@ void setup(void) {
   }
 
   myController.begin(&input, &output, &setpoint, KP, KI, KD, P_ON_E, FORWARD);
-  myController.setOutputLimits(-0.72, 0.72);  // double of max torque motors can exhert
+  myController.setOutputLimits(-max_torque, max_torque);  // double of max torque motors can exhert
   // myController.setWindUpLimits(-0.2 , 0.02);
   myController.setSampleTime(1);
   myController.start();
@@ -71,11 +77,11 @@ void compute(){
 
   myController.compute();
 
-  double torque = abs(output) * 0.5;
+  double torque = abs(output);
 
   double s = sign(output);
-  double pwm_dx = torque <= 0.005 ? 30*s : torque_to_pwm_dx(torque)*s;
-  double pwm_sx = torque <= 0.005 ? 30*s : torque_to_pwm_sx(torque)*s;
+  double pwm_dx = torque <= 0.005 ? 30*s : torque_to_pwm_dx(torque*torque_dx_coeff)*s;
+  double pwm_sx = torque <= 0.005 ? 30*s : torque_to_pwm_sx(torque*torque_sx_coeff)*s;
 
   move_pwm(MOT_SX, pwm_sx);
   move_pwm(MOT_DX, pwm_dx);
