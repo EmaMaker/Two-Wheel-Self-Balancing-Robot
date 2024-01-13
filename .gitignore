@@ -1,2 +1,5 @@
 matlab-sim/slprj/
 matlab-sim/*.slxc
+matlab-sim-v2/slprj/
+matlab-sim-v2/*.slxc
+**/*.autosave

@@ -6,7 +6,7 @@
 constexpr float MOT_SX_MULT = 1.0;
 constexpr float MOT_DX_MULT = 1.0;
 
-ArduPID myController;
+ArduPID angleCtrl, speedCtrl;
 
 // Calculated with matlab, then adjusted by hand
 
@@ -20,14 +20,18 @@ Kd = KpTd/Tc
 
 constexpr double kponkd = 935.9697;
 constexpr double kionkd = 1.3189e+04;
-constexpr double KD = 0.002;
-constexpr double KP = KD*kponkd;
-constexpr double KI = KD*kionkd;
+constexpr double KD = 0.1;
+constexpr double KP = 5.8;
+constexpr double KI = 0.2;
 
 //double setpoint = -0.015;
 double setpoint = 0.0;
 double output = 0;
 double input = 0;
+
+double speed_setpoint = 0.0;
+double speed_output = 0.0;
+double speed_input = 0.0;
 
 double roll{ 0 }, pitch{ 0 }, yaw{ 0 };
 
@@ -53,11 +57,17 @@ void setup(void) {
     update_imu();
   }
 
-  myController.begin(&input, &output, &setpoint, KP, KI, KD, P_ON_E, FORWARD);
-  myController.setOutputLimits(-max_torque, max_torque);  // double of max torque motors can exhert
-  // myController.setWindUpLimits(-0.2 , 0.02);
-  myController.setSampleTime(1);
-  myController.start();
+  angleCtrl.begin(&input, &output, &setpoint, KP, KI, KD, P_ON_E, FORWARD);
+  angleCtrl.setOutputLimits(-max_torque, max_torque);  // double of max torque motors can exhert
+  // angleCtrl.setWindUpLimits(-0.2 , 0.02);
+  angleCtrl.setSampleTime(1);
+  angleCtrl.start();
+
+  speedCtrl.begin(&speed_input, &speed_output, &speed_setpoint, 0, 0.12, 0, P_ON_E, BACKWARD);
+  speedCtrl.setOutputLimits(-max_torque, max_torque);  // double of max torque motors can exhert
+  speedCtrl.setSampleTime(1);
+  speedCtrl.start();
+
 
 
   digitalWrite(LED_BUILTIN, LOW);
@@ -72,11 +82,20 @@ void loop() {
 }
 
 void compute(){
+  static unsigned long last_time;
+  unsigned long t = millis();
+  unsigned long dt = millis() - t;
+  last_time = t;
+
+  speedCtrl.compute();
+  Serial.print(speed_input);
+  Serial.print(" ");
+  Serial.println(speed_output);
+
   update_imu();
+  input = speed_output-pitch;
 
-  input = pitch;
-
-  myController.compute();
+  angleCtrl.compute();
 
   double torque = abs(output);
 
@@ -86,4 +105,7 @@ void compute(){
 
   move_pwm(MOT_SX, pwm_sx);
   move_pwm(MOT_DX, pwm_dx);
+
+
+  speed_input = torque*0.5*s;
 }
